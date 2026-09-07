@@ -201,16 +201,19 @@ Visit `http://localhost:3000/api/health` — it should return
 - **QBO integration itself** (OAuth, the actual sync jobs that populate
   `qbo_sync_log` and push/pull customers/invoices/items/time activities) is
   not implemented in this scaffold — only the local tables that model it.
-- **Job attachments use local disk storage** (`public/uploads/`), which
-  works for local dev but is the wrong choice for a real deployment: on
-  serverless/container platforms (Vercel included) the filesystem isn't
-  persistent or shared across instances, so uploads would vanish or 404
-  unpredictably. A real deployment should swap `app/jobs/actions.ts`'s
-  `addJobAttachment` for cloud object storage (S3, R2, etc.) — the
-  `JobAttachment.fileUrl` field already just stores a URL, so the schema
-  doesn't need to change. Attachment files are also gated by the same
-  session-based auth as everything else (via `middleware.ts`), so they're
-  not publicly link-shareable as-is.
+- **Job attachments** go through `lib/storage.ts`'s `saveUploadedFile`,
+  which writes to local disk (`public/uploads/`) by default — fine for
+  local dev, but serverless/container platforms (Vercel included) don't
+  have a persistent or shared filesystem, so uploads would vanish or 404
+  unpredictably in production. When `BLOB_READ_WRITE_TOKEN` is set (Vercel
+  sets it automatically once you provision Blob storage from the dashboard
+  — see Deployment below), the same function uploads to Vercel Blob
+  instead and returns its public URL — no other code needs to change,
+  since `JobAttachment.fileUrl` already just stores a URL either way. Note
+  that a Blob-hosted URL is public by design (`access: "public"`), unlike
+  the local-disk path which stays behind `middleware.ts`'s session check —
+  acceptable for now since these are job photos/work orders, not sensitive
+  documents, but worth knowing if that changes.
 - **Feature UI so far**: auth + role-based permission enforcement,
   customers (properties, contacts, contact-to-property scoping), jobs
   (status workflow, line items, scheduling, time tracking, invoicing,
@@ -222,6 +225,54 @@ Visit `http://localhost:3000/api/health` — it should return
   customer/property/job). Not yet built: a UI for editing role permissions
   (currently seed-only), and per-depot stock-quantity tracking (today a
   catalog item has one location, not a split quantity across several).
+
+## Deployment
+
+Target stack: **GitHub → Vercel** for hosting, **Neon** (Postgres) + **Vercel
+Blob** for storage — both provisioned from Vercel's own Storage tab, which
+wires their connection strings/tokens into your Vercel env vars
+automatically.
+
+1. **Push to GitHub.** Create a new repo (e.g. `field-service-app`) under
+   your account, then from this directory:
+   ```bash
+   git remote add origin https://github.com/<you>/field-service-app.git
+   git branch -M main
+   git push -u origin main
+   ```
+2. **Import into Vercel.** [vercel.com/new](https://vercel.com/new) → import
+   the GitHub repo. Framework preset auto-detects Next.js; no build
+   settings need changing (`npm run build` already runs
+   `prisma generate && prisma migrate deploy && next build`, so every
+   deploy applies pending migrations before building).
+3. **Provision storage** from the project's **Storage** tab in Vercel:
+   - **Neon (Postgres)** — creating it sets `DATABASE_URL` for you.
+   - **Blob** — creating it sets `BLOB_READ_WRITE_TOKEN` for you, which is
+     what flips `lib/storage.ts` over from local disk to Blob uploads.
+4. **Set the remaining environment variables** under Project Settings →
+   Environment Variables (Production, and Preview if you want preview
+   deploys to also work):
+   - `SESSION_SECRET` — generate a fresh one, don't reuse your local `.env`
+     value: `openssl rand -base64 32`.
+   - `GOOGLE_PLACES_API_KEY` — same key as local, or a separate one. Either
+     way, restrict it in Google Cloud Console to your production domain
+     once you know it.
+   - `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` — a real email and a strong
+     password for the one seeded admin account. `prisma/seed.ts` refuses to
+     create a default admin in production without these set, so this isn't
+     optional.
+5. **Deploy**, then seed the production database once (seeding isn't part
+   of the build step — it's meant to run once, not on every deploy):
+   ```bash
+   DATABASE_URL="<production DATABASE_URL from Vercel>" \
+   SEED_ADMIN_EMAIL="you@yourcompany.com" \
+   SEED_ADMIN_PASSWORD="<a real password>" \
+   NODE_ENV=production \
+   npm run db:seed
+   ```
+   Run that from your machine (with those env vars set for just that
+   command) or via `vercel env pull` + the same command. Log in with those
+   credentials once deployed, then create real accounts via `/users/new`.
 
 ## Useful commands
 
