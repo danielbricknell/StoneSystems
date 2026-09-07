@@ -1,0 +1,310 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color: #1a1d21;
+  background: #f7f8fa;
+}
+
+a {
+  color: #2454ff;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.9rem 2rem;
+  background: #fff;
+  border-bottom: 1px solid #e3e5e8;
+}
+
+.topnav strong {
+  font-size: 1.05rem;
+}
+
+.topnav a {
+  color: #4b5563;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.topnav-spacer {
+  flex: 1;
+}
+
+.topnav-search input {
+  padding: 0.4rem 0.7rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  width: 180px;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 1.4rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  background: #2454ff;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #1a3fcc;
+  text-decoration: none;
+}
+
+.btn-secondary {
+  background: #eef0f3;
+  color: #1a1d21;
+}
+
+.btn-secondary:hover {
+  background: #e0e3e8;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e3e5e8;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #e3e5e8;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #eef0f3;
+  font-size: 0.9rem;
+}
+
+th {
+  background: #fafbfc;
+  font-weight: 600;
+  color: #4b5563;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.empty {
+  color: #6b7280;
+  font-size: 0.9rem;
+  padding: 1rem 0;
+}
+
+.field {
+  margin-bottom: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.field input,
+.field textarea {
+  padding: 0.5rem 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.field-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.field-inline label {
+  font-weight: 500;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+}
+
+.meta {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #eef0f3;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.form-inline {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eef0f3;
+}
+
+.form-inline .field {
+  margin-bottom: 0;
+  min-width: 160px;
+  flex: 1;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.address-field {
+  position: relative;
+}
+
+.address-suggestions {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.address-suggestions ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.address-suggestions li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  background: none;
+  font-size: 0.87rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.address-suggestions li button:hover {
+  background: #f0f2f5;
+}
+
+.btn-danger {
+  background: none;
+  color: #b91c1c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  text-decoration: underline;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+}
+
+.divider-top {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eef0f3;
+}
+
+.login-card {
+  max-width: 360px;
+}
+
+.error-text {
+  color: #b91c1c;
+}
+
+.attachment-thumb {
+  max-width: 200px;
+  border-radius: 6px;
+  display: block;
+  border: 1px solid #e3e5e8;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll table {
+  min-width: 700px;
+}
+
+.address-suggestions-footer {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.7rem;
+  color: #9ca3af;
+  border-top: 1px solid #eef0f3;
+  text-align: right;
+}

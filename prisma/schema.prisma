@@ -1,0 +1,539 @@
+// Field Service Management App — Prisma schema
+// Generated from data-model-spec.md. Table/column names use snake_case via
+// @@map/@map to match the spec exactly; Prisma Client fields stay camelCase.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum QboSyncStatus {
+  synced
+  pending
+  error
+}
+
+enum JobType {
+  service_call
+  small_job
+  large_project
+}
+
+enum JobStatus {
+  new
+  scheduled
+  in_progress
+  completed
+  invoiced
+  closed
+}
+
+enum JobPriority {
+  normal
+  urgent
+  emergency
+}
+
+enum AttachmentCategory {
+  before_photo
+  after_photo
+  signature
+  document
+}
+
+enum QuoteStatus {
+  draft
+  sent
+  accepted
+  declined
+  expired
+  converted
+}
+
+enum ServiceRequestSource {
+  email
+  web_form
+}
+
+enum ServiceRequestStatus {
+  new
+  reviewed
+  converted
+  spam
+}
+
+enum AppointmentStatus {
+  scheduled
+  confirmed
+  en_route
+  done
+  no_show
+}
+
+enum TimeEntryApprovalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  void
+}
+
+enum SyncEntityType {
+  customer
+  invoice
+  item
+  time_activity
+}
+
+enum SyncDirection {
+  push
+  pull
+}
+
+enum SyncLogStatus {
+  success
+  error
+}
+
+// ---------------------------------------------------------------------------
+// 1. People & Access
+// ---------------------------------------------------------------------------
+
+// A depot is anywhere staff or stock are based — a fixed office/warehouse,
+// or a technician's van. `type` distinguishes the two; `assignedUserId` is
+// only meaningful for vehicles (whose van this is).
+enum DepotType {
+  office
+  vehicle
+}
+
+model Depot {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  type           DepotType @default(office)
+  address        String?
+  assignedUserId String?   @map("assigned_user_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  assignedUser User? @relation("DepotAssignedUser", fields: [assignedUserId], references: [id])
+
+  users          User[]
+  inventoryItems InventoryItem[]
+
+  @@map("depots")
+}
+
+model Role {
+  id          String @id @default(uuid()) @db.Uuid
+  name        String
+  permissions Json
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  id             String  @id @default(uuid()) @db.Uuid
+  fullName       String  @map("full_name")
+  email          String  @unique
+  phone          String?
+  passwordHash   String? @map("password_hash")
+  roleId         String  @map("role_id") @db.Uuid
+  depotId        String  @map("depot_id") @db.Uuid
+  active         Boolean @default(true)
+  qboEmployeeId  String? @map("qbo_employee_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  role  Role  @relation(fields: [roleId], references: [id])
+  depot Depot @relation(fields: [depotId], references: [id])
+
+  jobNotes           JobNote[]
+  uploadedAttachments JobAttachment[]     @relation("AttachmentUploadedBy")
+  createdQuotes      Quote[]             @relation("QuoteCreatedBy")
+  appointments       Appointment[]
+  timeEntries        TimeEntry[]         @relation("TimeEntryUser")
+  approvedTimeEntries TimeEntry[]        @relation("TimeEntryApprovedBy")
+  assignedDepots     Depot[]             @relation("DepotAssignedUser")
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// 2. Customers & Properties
+// ---------------------------------------------------------------------------
+
+model Customer {
+  id              String         @id @default(uuid()) @db.Uuid
+  name            String
+  billingAddress  String?        @map("billing_address")
+  phone           String?
+  email           String?
+  notes           String?
+  qboId           String?        @map("qbo_id")
+  qboSyncStatus   QboSyncStatus? @map("qbo_sync_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  properties      Property[]
+  contacts        Contact[]
+  jobs            Job[]
+  quotes          Quote[]
+  serviceRequests ServiceRequest[]
+
+  @@map("customers")
+}
+
+model Property {
+  id          String  @id @default(uuid()) @db.Uuid
+  customerId  String  @map("customer_id") @db.Uuid
+  label       String?
+  address     String?
+  accessNotes String? @map("access_notes")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customer          Customer           @relation(fields: [customerId], references: [id])
+  contactProperties ContactProperty[]
+  jobs              Job[]
+  quotes            Quote[]
+
+  @@map("properties")
+}
+
+model Contact {
+  id         String  @id @default(uuid()) @db.Uuid
+  customerId String  @map("customer_id") @db.Uuid
+  name       String
+  role       String?
+  phone      String?
+  email      String?
+  isPrimary  Boolean @default(false) @map("is_primary")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customer          Customer          @relation(fields: [customerId], references: [id])
+  contactProperties ContactProperty[]
+
+  @@map("contacts")
+}
+
+/// Join table: a contact with no rows here is account-wide; one or more rows
+/// scopes the contact to those specific properties.
+model ContactProperty {
+  id         String @id @default(uuid()) @db.Uuid
+  contactId  String @map("contact_id") @db.Uuid
+  propertyId String @map("property_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  contact  Contact  @relation(fields: [contactId], references: [id])
+  property Property @relation(fields: [propertyId], references: [id])
+
+  @@unique([contactId, propertyId])
+  @@map("contact_properties")
+}
+
+// ---------------------------------------------------------------------------
+// 3. Jobs
+// ---------------------------------------------------------------------------
+
+model Job {
+  id               String      @id @default(uuid()) @db.Uuid
+  customerId       String      @map("customer_id") @db.Uuid
+  propertyId       String      @map("property_id") @db.Uuid
+  type             JobType
+  status           JobStatus   @default(new)
+  title            String
+  description      String?
+  priority         JobPriority?
+  assignedUserIds  String[]    @default([]) @map("assigned_user_ids") @db.Uuid
+  parentJobId      String?     @map("parent_job_id") @db.Uuid
+  scheduledStart   DateTime?   @map("scheduled_start")
+  scheduledEnd     DateTime?   @map("scheduled_end")
+  actualStart      DateTime?   @map("actual_start")
+  actualEnd        DateTime?   @map("actual_end")
+  qboInvoiceId     String?     @map("qbo_invoice_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  property Property @relation(fields: [propertyId], references: [id])
+
+  parentJob Job?  @relation("JobPhases", fields: [parentJobId], references: [id])
+  subJobs   Job[] @relation("JobPhases")
+
+  lineItems   JobLineItem[]
+  notes       JobNote[]
+  attachments JobAttachment[]
+  quotes      Quote[]
+  appointments Appointment[]
+  timeEntries TimeEntry[]
+  invoices    Invoice[]
+  serviceRequest ServiceRequest?
+
+  @@map("jobs")
+}
+
+model JobLineItem {
+  id               String   @id @default(uuid()) @db.Uuid
+  jobId            String   @map("job_id") @db.Uuid
+  inventoryItemId  String?  @map("inventory_item_id") @db.Uuid
+  description      String
+  quantity         Decimal  @db.Decimal(12, 2)
+  unitPrice        Decimal  @map("unit_price") @db.Decimal(12, 2)
+  lineTotal        Decimal  @map("line_total") @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  job            Job             @relation(fields: [jobId], references: [id])
+  inventoryItem  InventoryItem?  @relation(fields: [inventoryItemId], references: [id])
+
+  @@map("job_line_items")
+}
+
+model JobNote {
+  id     String @id @default(uuid()) @db.Uuid
+  jobId  String @map("job_id") @db.Uuid
+  userId String @map("user_id") @db.Uuid
+  body   String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  job  Job  @relation(fields: [jobId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("job_notes")
+}
+
+model JobAttachment {
+  id           String              @id @default(uuid()) @db.Uuid
+  jobId        String              @map("job_id") @db.Uuid
+  fileUrl      String              @map("file_url")
+  uploadedBy   String              @map("uploaded_by") @db.Uuid
+  category     AttachmentCategory?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  job      Job  @relation(fields: [jobId], references: [id])
+  uploader User @relation("AttachmentUploadedBy", fields: [uploadedBy], references: [id])
+
+  @@map("job_attachments")
+}
+
+// ---------------------------------------------------------------------------
+// 4. Quotes / Estimates
+// ---------------------------------------------------------------------------
+
+model Quote {
+  id               String      @id @default(uuid()) @db.Uuid
+  customerId       String      @map("customer_id") @db.Uuid
+  propertyId       String?     @map("property_id") @db.Uuid
+  jobId            String?     @map("job_id") @db.Uuid
+  status           QuoteStatus @default(draft)
+  notes            String?
+  qboEstimateId    String?     @map("qbo_estimate_id")
+  qboSyncStatus    QboSyncStatus? @map("qbo_sync_status")
+  total            Decimal?    @db.Decimal(12, 2)
+  createdBy        String      @map("created_by") @db.Uuid
+  sentAt           DateTime?   @map("sent_at")
+  expiresAt        DateTime?   @map("expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  customer Customer  @relation(fields: [customerId], references: [id])
+  property Property? @relation(fields: [propertyId], references: [id])
+  job      Job?      @relation(fields: [jobId], references: [id])
+  creator  User      @relation("QuoteCreatedBy", fields: [createdBy], references: [id])
+
+  lineItems QuoteLineItem[]
+
+  @@map("quotes")
+}
+
+model QuoteLineItem {
+  id               String  @id @default(uuid()) @db.Uuid
+  quoteId          String  @map("quote_id") @db.Uuid
+  inventoryItemId  String? @map("inventory_item_id") @db.Uuid
+  description      String
+  quantity         Decimal @db.Decimal(12, 2)
+  unitPrice        Decimal @map("unit_price") @db.Decimal(12, 2)
+  lineTotal        Decimal @map("line_total") @db.Decimal(12, 2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  quote         Quote          @relation(fields: [quoteId], references: [id])
+  inventoryItem InventoryItem? @relation(fields: [inventoryItemId], references: [id])
+
+  @@map("quote_line_items")
+}
+
+// ---------------------------------------------------------------------------
+// 5. Service Call Intake
+// ---------------------------------------------------------------------------
+
+model ServiceRequest {
+  id                 String                @id @default(uuid()) @db.Uuid
+  source             ServiceRequestSource
+  rawEmailBody       String?               @map("raw_email_body")
+  customerName       String?               @map("customer_name")
+  customerEmail      String?               @map("customer_email")
+  customerPhone      String?               @map("customer_phone")
+  propertyAddress    String?               @map("property_address")
+  description        String?
+  status             ServiceRequestStatus  @default(new)
+  matchedCustomerId  String?               @map("matched_customer_id") @db.Uuid
+  convertedJobId     String?               @unique @map("converted_job_id") @db.Uuid
+  receivedAt         DateTime              @map("received_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  matchedCustomer Customer? @relation(fields: [matchedCustomerId], references: [id])
+  convertedJob    Job?      @relation(fields: [convertedJobId], references: [id])
+
+  @@map("service_requests")
+}
+
+// ---------------------------------------------------------------------------
+// 6. Scheduling
+// ---------------------------------------------------------------------------
+
+model Appointment {
+  id        String            @id @default(uuid()) @db.Uuid
+  jobId     String            @map("job_id") @db.Uuid
+  userId    String            @map("user_id") @db.Uuid
+  startTime DateTime          @map("start_time")
+  endTime   DateTime          @map("end_time")
+  status    AppointmentStatus @default(scheduled)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  job  Job  @relation(fields: [jobId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("appointments")
+}
+
+// ---------------------------------------------------------------------------
+// 7. Time Tracking
+// ---------------------------------------------------------------------------
+
+model TimeEntry {
+  id                 String                   @id @default(uuid()) @db.Uuid
+  userId             String                   @map("user_id") @db.Uuid
+  jobId              String                   @map("job_id") @db.Uuid
+  clockIn            DateTime                 @map("clock_in")
+  clockOut           DateTime?                @map("clock_out")
+  breakMinutes       Int?                     @map("break_minutes")
+  billable           Boolean                  @default(true)
+  notes              String?
+  approvalStatus     TimeEntryApprovalStatus  @default(pending) @map("approval_status")
+  approvedBy         String?                  @map("approved_by") @db.Uuid
+  approvedAt         DateTime?                @map("approved_at")
+  qboTimeActivityId  String?                  @map("qbo_time_activity_id")
+  qboSyncStatus      QboSyncStatus?           @map("qbo_sync_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user     User  @relation("TimeEntryUser", fields: [userId], references: [id])
+  job      Job   @relation(fields: [jobId], references: [id])
+  approver User? @relation("TimeEntryApprovedBy", fields: [approvedBy], references: [id])
+
+  @@map("time_entries")
+}
+
+// ---------------------------------------------------------------------------
+// 8. Inventory
+// ---------------------------------------------------------------------------
+
+model InventoryItem {
+  id               String         @id @default(uuid()) @db.Uuid
+  name             String
+  sku              String?
+  unitCost         Decimal?       @map("unit_cost") @db.Decimal(12, 2)
+  unitPrice        Decimal?       @map("unit_price") @db.Decimal(12, 2)
+  quantityOnHand   Decimal?       @map("quantity_on_hand") @db.Decimal(12, 2)
+  depotId          String?        @map("depot_id") @db.Uuid
+  qboItemId        String?        @map("qbo_item_id")
+  qboSyncStatus    QboSyncStatus? @map("qbo_sync_status")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  depot          Depot?          @relation(fields: [depotId], references: [id])
+  jobLineItems   JobLineItem[]
+  quoteLineItems QuoteLineItem[]
+
+  @@map("inventory_items")
+}
+
+// ---------------------------------------------------------------------------
+// 9. Invoicing
+// ---------------------------------------------------------------------------
+
+model Invoice {
+  id           String        @id @default(uuid()) @db.Uuid
+  jobId        String        @map("job_id") @db.Uuid
+  qboInvoiceId String?       @map("qbo_invoice_id")
+  status       InvoiceStatus @default(draft)
+  total        Decimal?      @db.Decimal(12, 2)
+  syncedAt     DateTime?     @map("synced_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  job Job @relation(fields: [jobId], references: [id])
+
+  @@map("invoices")
+}
+
+// ---------------------------------------------------------------------------
+// 10. Sync Infrastructure
+// ---------------------------------------------------------------------------
+
+model QboSyncLog {
+  id            String         @id @default(uuid()) @db.Uuid
+  entityType    SyncEntityType @map("entity_type")
+  entityId      String         @map("entity_id") @db.Uuid
+  direction     SyncDirection
+  status        SyncLogStatus
+  errorMessage  String?        @map("error_message")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("qbo_sync_log")
+}
