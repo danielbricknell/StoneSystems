@@ -26,9 +26,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body>
         <nav className="topnav">
           <div className="topnav-primary">
-            <strong className="brand">
-              Stone<span className="brand-light">Systems</span>
-            </strong>
+            <Link href="/" className="brand-logo">
+              {/* eslint-disable-next-line @next/next/no-img-element -- small static
+                  asset; not worth routing through the image optimizer */}
+              <img src="/logo.png" alt="Stone Systems" width={85} height={36} />
+            </Link>
             {session && isFieldTechRole(session.roleName) && (
               <>
                 <Link href="/jobs">Jobs</Link>

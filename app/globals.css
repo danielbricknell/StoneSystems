@@ -47,17 +47,15 @@ a:hover {
   gap: 0.6rem 1.25rem;
 }
 
-.brand {
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--text-dark);
-  white-space: nowrap;
+.brand-logo {
+  display: flex;
+  align-items: center;
 }
 
-.brand-light {
-  font-weight: 400;
+.brand-logo img {
+  display: block;
+  height: 36px;
+  width: auto;
 }
 
 .topnav a {
