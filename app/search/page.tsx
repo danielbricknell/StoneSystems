@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
+import { isFieldTechRole } from "@/lib/roles";
 import { formatEnum } from "@/lib/format";
 
 const RESULT_LIMIT = 10;
@@ -17,7 +18,7 @@ export default async function SearchPage({
   const query = (searchParams.q ?? "").trim();
   const canSearch = query.length >= 2;
 
-  const isFieldTech = session.roleName === "Field Tech";
+  const isFieldTech = isFieldTechRole(session.roleName);
   const canSearchGeneral = canSearch && !isFieldTech;
   const canSearchUsers = canSearchGeneral && (await hasPermission(session.userId, "manage_users"));
 

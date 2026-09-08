@@ -3,13 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-
-function str(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
+import { str } from "@/lib/form-data";
 
 export async function submitServiceRequest(formData: FormData) {
   const customerName = str(formData, "customerName");

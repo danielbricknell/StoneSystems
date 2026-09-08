@@ -15,10 +15,16 @@ export async function createInvoice(jobId: string) {
 
   const total = job.lineItems.reduce((sum, item) => sum + item.lineTotal.toNumber(), 0);
 
-  await prisma.$transaction([
-    prisma.invoice.create({ data: { jobId, total } }),
-    prisma.job.update({ where: { id: jobId }, data: { status: JobStatus.invoiced } }),
-  ]);
+  // Checked inside the transaction (rather than as a separate query before
+  // it) so a double form submit can't have both requests pass the check
+  // before either commits its create.
+  await prisma.$transaction(async (tx) => {
+    const existing = await tx.invoice.findFirst({ where: { jobId } });
+    if (existing) throw new Error("This job already has an invoice");
+
+    await tx.invoice.create({ data: { jobId, total } });
+    await tx.job.update({ where: { id: jobId }, data: { status: JobStatus.invoiced } });
+  });
 
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath("/jobs");

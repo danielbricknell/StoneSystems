@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { prisma } from "./prisma";
 import { requireSession, type SessionPayload } from "./auth";
 
@@ -28,5 +29,18 @@ export async function requirePermission(key: PermissionKey): Promise<SessionPayl
   if (!allowed) {
     throw new Error("You don't have permission to do that.");
   }
+  return session;
+}
+
+// For pages (not actions) that should redirect rather than throw when the
+// viewer lacks a permission, matching how a missing session redirects to
+// /login instead of erroring.
+export async function requirePermissionOrRedirect(
+  key: PermissionKey,
+  redirectTo: string,
+): Promise<SessionPayload> {
+  const session = await requireSession();
+  const allowed = await hasPermission(session.userId, key);
+  if (!allowed) redirect(redirectTo);
   return session;
 }

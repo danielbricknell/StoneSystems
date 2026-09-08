@@ -1,15 +1,10 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { requireSession } from "@/lib/auth";
-import { hasPermission } from "@/lib/permissions";
+import { requirePermissionOrRedirect } from "@/lib/permissions";
 import { JobForm } from "./JobForm";
 
 export default async function NewJobPage() {
-  const session = await requireSession();
-  if (!(await hasPermission(session.userId, "edit_jobs"))) {
-    redirect("/jobs");
-  }
+  await requirePermissionOrRedirect("edit_jobs", "/jobs");
 
   const customers = await prisma.customer.findMany({
     orderBy: { name: "asc" },

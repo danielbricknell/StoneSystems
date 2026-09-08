@@ -3,22 +3,12 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-
-function str(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function numberOrNull(formData: FormData, key: string): number | null {
-  const value = str(formData, key);
-  if (value === null) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-}
+import { requireSession } from "@/lib/auth";
+import { numberOrNull, str } from "@/lib/form-data";
 
 export async function createInventoryItem(formData: FormData) {
+  await requireSession();
+
   const name = str(formData, "name");
   if (!name) throw new Error("Item name is required");
 

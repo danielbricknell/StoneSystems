@@ -5,18 +5,7 @@ import { revalidatePath } from "next/cache";
 import { JobType, Prisma, QuoteStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions";
-
-function str(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
-
-function dateOrNull(formData: FormData, key: string): Date | null {
-  const value = str(formData, key);
-  return value ? new Date(value) : null;
-}
+import { dateOrNull, str } from "@/lib/form-data";
 
 export async function createQuote(formData: FormData) {
   const session = await requirePermission("view_financials");
@@ -43,11 +32,18 @@ export async function addQuoteLineItem(quoteId: string, formData: FormData) {
   await requirePermission("view_financials");
 
   const description = str(formData, "description");
-  const quantity = Number(str(formData, "quantity"));
-  const unitPrice = Number(str(formData, "unitPrice"));
+  const quantityRaw = str(formData, "quantity");
+  const unitPriceRaw = str(formData, "unitPrice");
   const inventoryItemId = str(formData, "inventoryItemId");
 
-  if (!description || !Number.isFinite(quantity) || !Number.isFinite(unitPrice)) {
+  if (!description || !quantityRaw || !unitPriceRaw) {
+    throw new Error("Description, quantity, and unit price are required");
+  }
+
+  const quantity = Number(quantityRaw);
+  const unitPrice = Number(unitPriceRaw);
+
+  if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice)) {
     throw new Error("Description, quantity, and unit price are required");
   }
 
@@ -86,7 +82,10 @@ export async function updateQuoteStatus(quoteId: string, formData: FormData) {
 }
 
 export async function convertQuoteToJob(quoteId: string) {
-  await requirePermission("view_financials");
+  // Creates a Job + JobLineItems — the same mutation category createJob
+  // gates behind edit_jobs, not view_financials (every seeded role sets
+  // both the same today, but they're conceptually different permissions).
+  await requirePermission("edit_jobs");
 
   const quote = await prisma.quote.findUniqueOrThrow({
     where: { id: quoteId },

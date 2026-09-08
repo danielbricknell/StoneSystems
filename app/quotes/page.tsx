@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { requirePermissionOrRedirect } from "@/lib/permissions";
 import { formatEnum } from "@/lib/format";
 
 export default async function QuotesPage() {
+  await requirePermissionOrRedirect("view_financials", "/");
+
   const quotes = await prisma.quote.findMany({
     orderBy: { createdAt: "desc" },
     include: { customer: true, property: true },

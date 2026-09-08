@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { SESSION_COOKIE } from "@/lib/session-cookie";
+import { isAdminRole, isFieldTechRole } from "@/lib/roles";
 
 const PUBLIC_PATHS = ["/login", "/api/health", "/request-service"];
 
@@ -10,7 +11,9 @@ const PUBLIC_PATHS = ["/login", "/api/health", "/request-service"];
 const FIELD_TECH_ALLOWED_PREFIXES = ["/jobs", "/schedule", "/time", "/search"];
 
 function getSecretKey(): Uint8Array {
-  return new TextEncoder().encode(process.env.SESSION_SECRET);
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) throw new Error("SESSION_SECRET is not set");
+  return new TextEncoder().encode(secret);
 }
 
 async function getSessionRole(request: NextRequest): Promise<string | null> {
@@ -43,12 +46,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (roleName === "Field Tech" && !isFieldTechAllowed(pathname)) {
+  if (isFieldTechRole(roleName) && !isFieldTechAllowed(pathname)) {
     return NextResponse.redirect(new URL("/jobs", request.url));
   }
 
   // manage_users is Admin-only in every seeded role but Admin itself.
-  if (pathname.startsWith("/users") && roleName !== "Admin") {
+  if (pathname.startsWith("/users") && !isAdminRole(roleName)) {
     return NextResponse.redirect(new URL("/jobs", request.url));
   }
 

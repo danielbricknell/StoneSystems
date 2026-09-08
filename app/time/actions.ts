@@ -5,28 +5,31 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { requirePermission } from "@/lib/permissions";
-
-function str(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
+import { str } from "@/lib/form-data";
 
 export async function clockIn(jobId: string) {
   const session = await requireSession();
 
-  const openEntry = await prisma.timeEntry.findFirst({
-    where: { userId: session.userId, clockOut: null },
+  // Wrapped in a transaction so the "is there an open entry" check and the
+  // create happen against the same snapshot, closing most of the window for
+  // a double-click/two-tab race to create two open entries for one user.
+  const alreadyClockedIn = await prisma.$transaction(async (tx) => {
+    const openEntry = await tx.timeEntry.findFirst({
+      where: { userId: session.userId, clockOut: null },
+    });
+
+    if (openEntry) return true;
+
+    await tx.timeEntry.create({
+      data: { userId: session.userId, jobId, clockIn: new Date() },
+    });
+
+    return false;
   });
 
-  if (openEntry) {
+  if (alreadyClockedIn) {
     redirect(`/jobs/${jobId}?error=already-clocked-in`);
   }
-
-  await prisma.timeEntry.create({
-    data: { userId: session.userId, jobId, clockIn: new Date() },
-  });
 
   revalidatePath(`/jobs/${jobId}`);
   revalidatePath("/time");

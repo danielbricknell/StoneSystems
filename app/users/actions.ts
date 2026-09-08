@@ -5,13 +5,7 @@ import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions";
-
-function str(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
+import { str } from "@/lib/form-data";
 
 export async function createUser(formData: FormData) {
   await requirePermission("manage_users");

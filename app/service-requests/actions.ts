@@ -4,15 +4,13 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { JobType, ServiceRequestStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-
-function str(formData: FormData, key: string): string | null {
-  const value = formData.get(key);
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-}
+import { requireSession } from "@/lib/auth";
+import { requirePermission } from "@/lib/permissions";
+import { str } from "@/lib/form-data";
 
 export async function markServiceRequestReviewed(requestId: string) {
+  await requireSession();
+
   await prisma.serviceRequest.update({
     where: { id: requestId },
     data: { status: ServiceRequestStatus.reviewed },
@@ -23,6 +21,8 @@ export async function markServiceRequestReviewed(requestId: string) {
 }
 
 export async function markServiceRequestSpam(requestId: string) {
+  await requireSession();
+
   await prisma.serviceRequest.update({
     where: { id: requestId },
     data: { status: ServiceRequestStatus.spam },
@@ -33,6 +33,8 @@ export async function markServiceRequestSpam(requestId: string) {
 }
 
 export async function convertServiceRequest(requestId: string, formData: FormData) {
+  await requirePermission("edit_jobs");
+
   const request = await prisma.serviceRequest.findUniqueOrThrow({ where: { id: requestId } });
   if (request.convertedJobId) throw new Error("This request has already been converted");
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { requirePermissionOrRedirect } from "@/lib/permissions";
 import { formatEnum } from "@/lib/format";
 import { addQuoteLineItem, convertQuoteToJob, updateQuoteStatus } from "../actions";
 import { LineItemForm } from "@/components/LineItemForm";
@@ -12,6 +13,8 @@ export default async function QuoteDetailPage({
 }: {
   params: { id: string };
 }) {
+  await requirePermissionOrRedirect("view_financials", "/quotes");
+
   const [quote, inventoryItems] = await Promise.all([
     prisma.quote.findUnique({
       where: { id: params.id },

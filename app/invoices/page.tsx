@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { requirePermissionOrRedirect } from "@/lib/permissions";
 import { formatEnum } from "@/lib/format";
 
 export default async function InvoicesPage() {
+  await requirePermissionOrRedirect("view_financials", "/");
+
   const invoices = await prisma.invoice.findMany({
     orderBy: { createdAt: "desc" },
     include: { job: { include: { customer: true } } },

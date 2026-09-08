@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { requirePermissionOrRedirect } from "@/lib/permissions";
 import { QuoteForm } from "./QuoteForm";
 
 export default async function NewQuotePage() {
+  await requirePermissionOrRedirect("view_financials", "/quotes");
+
   const customers = await prisma.customer.findMany({
     orderBy: { name: "asc" },
     include: { properties: { orderBy: { createdAt: "asc" } } },

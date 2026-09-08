@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
+import { isFieldTechRole } from "@/lib/roles";
 
 export default async function HomePage() {
   const session = await getSession();
-  const isFieldTech = session?.roleName === "Field Tech";
+  const isFieldTech = !!session && isFieldTechRole(session.roleName);
 
   return (
     <main>

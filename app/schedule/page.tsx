@@ -196,7 +196,7 @@ export default async function SchedulePage({
                       const dayStart = day;
                       const dayEnd = addDays(day, 1);
                       const dayAppointments = techAppointments.filter(
-                        (a) => a.startTime < dayEnd && a.endTime >= dayStart,
+                        (a) => a.startTime < dayEnd && a.endTime > dayStart,
                       );
                       return (
                         <td key={day.toISOString()}>
