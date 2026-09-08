@@ -14,7 +14,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Stone Security — Field Service",
+  title: "Stone Systems — Field Service",
   description: "Customer, job, scheduling, and QBO sync management.",
 };
 
@@ -27,7 +27,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <nav className="topnav">
           <div className="topnav-primary">
             <strong className="brand">
-              Stone<span className="brand-light">Security</span>
+              Stone<span className="brand-light">Systems</span>
             </strong>
             {session && isFieldTechRole(session.roleName) && (
               <>
