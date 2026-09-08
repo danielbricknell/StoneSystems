@@ -3,7 +3,10 @@ import { jwtVerify } from "jose";
 import { SESSION_COOKIE } from "@/lib/session-cookie";
 import { isAdminRole, isFieldTechRole } from "@/lib/roles";
 
-const PUBLIC_PATHS = ["/login", "/api/health", "/request-service"];
+// /logo.png is public (not under /uploads) so it renders in the nav on the
+// public /login and /request-service pages too — unlike job attachments
+// under /uploads, which stay gated behind a session on purpose.
+const PUBLIC_PATHS = ["/login", "/api/health", "/request-service", "/logo.png"];
 
 // Field Techs get "job details, schedule, notes, and time entry only" per
 // the spec — everything else (customers, quotes, invoices, inventory,
