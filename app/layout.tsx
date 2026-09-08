@@ -18,36 +18,35 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     <html lang="en">
       <body>
         <nav className="topnav">
-          <strong>Field Service App</strong>
-          {session && isFieldTechRole(session.roleName) && (
-            <>
-              <Link href="/jobs">Jobs</Link>
-              <Link href="/schedule">Schedule</Link>
-              <Link href="/time">Time</Link>
-            </>
-          )}
-          {session && !isFieldTechRole(session.roleName) && (
-            <>
-              <Link href="/service-requests">Requests</Link>
-              <Link href="/customers">Customers</Link>
-              <Link href="/jobs">Jobs</Link>
-              <Link href="/quotes">Quotes</Link>
-              <Link href="/invoices">Invoices</Link>
-              <Link href="/schedule">Schedule</Link>
-              <Link href="/time">Time</Link>
-              <Link href="/inventory">Inventory</Link>
-              <Link href="/depots">Depots</Link>
-              {isAdminRole(session.roleName) && <Link href="/users">Team</Link>}
-            </>
-          )}
-          <span className="topnav-spacer" />
+          <div className="topnav-primary">
+            <strong>Field Service App</strong>
+            {session && isFieldTechRole(session.roleName) && (
+              <>
+                <Link href="/jobs">Jobs</Link>
+                <Link href="/schedule">Schedule</Link>
+                <Link href="/time">Time</Link>
+              </>
+            )}
+            {session && !isFieldTechRole(session.roleName) && (
+              <>
+                <Link href="/service-requests">Requests</Link>
+                <Link href="/customers">Customers</Link>
+                <Link href="/jobs">Jobs</Link>
+                <Link href="/quotes">Quotes</Link>
+                <Link href="/invoices">Invoices</Link>
+                <Link href="/schedule">Schedule</Link>
+                <Link href="/time">Time</Link>
+                <Link href="/inventory">Inventory</Link>
+                <Link href="/depots">Depots</Link>
+                {isAdminRole(session.roleName) && <Link href="/users">Team</Link>}
+              </>
+            )}
+          </div>
           {session && (
-            <form action="/search" method="get" className="topnav-search">
-              <input type="search" name="q" placeholder="Search…" aria-label="Search" />
-            </form>
-          )}
-          {session && (
-            <>
+            <div className="topnav-actions">
+              <form action="/search" method="get" className="topnav-search">
+                <input type="search" name="q" placeholder="Search…" aria-label="Search" />
+              </form>
               <span className="meta">
                 {session.fullName} ({session.roleName})
               </span>
@@ -56,7 +55,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                   Log Out
                 </button>
               </form>
-            </>
+            </div>
           )}
         </nav>
         {children}

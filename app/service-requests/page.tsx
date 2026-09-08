@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatEnum } from "@/lib/format";
+import { formatEnum, statusBadgeClass } from "@/lib/format";
 
 export default async function ServiceRequestsPage() {
   const requests = await prisma.serviceRequest.findMany({
@@ -43,7 +43,7 @@ export default async function ServiceRequestsPage() {
                 <td>{request.customerName ?? "—"}</td>
                 <td>{request.propertyAddress ?? "—"}</td>
                 <td>
-                  <span className="badge">{formatEnum(request.status)}</span>
+                  <span className={statusBadgeClass(request.status)}>{formatEnum(request.status)}</span>
                 </td>
               </tr>
             ))}

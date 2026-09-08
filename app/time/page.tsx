@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
-import { formatEnum } from "@/lib/format";
+import { formatEnum, statusBadgeClass } from "@/lib/format";
 import { approveTimeEntry, rejectTimeEntry } from "./actions";
 
 function formatMinutes(clockIn: Date, clockOut: Date | null, breakMinutes: number | null) {
@@ -68,7 +68,9 @@ export default async function TimePage() {
                   <td>{formatMinutes(entry.clockIn, entry.clockOut, entry.breakMinutes)}</td>
                   <td>{entry.billable ? "Yes" : "No"}</td>
                   <td>
-                    <span className="badge">{formatEnum(entry.approvalStatus)}</span>
+                    <span className={statusBadgeClass(entry.approvalStatus)}>
+                      {formatEnum(entry.approvalStatus)}
+                    </span>
                   </td>
                 </tr>
               ))}

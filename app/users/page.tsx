@@ -39,7 +39,13 @@ export default async function UsersPage() {
                 <td>{user.role.name}</td>
                 <td>{user.depot.name}</td>
                 <td>{user.email}</td>
-                <td>{user.active ? <span className="badge">Active</span> : "Inactive"}</td>
+                <td>
+                  {user.active ? (
+                    <span className="badge badge-success">Active</span>
+                  ) : (
+                    <span className="badge badge-danger">Inactive</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requirePermissionOrRedirect } from "@/lib/permissions";
-import { formatEnum } from "@/lib/format";
+import { formatEnum, statusBadgeClass } from "@/lib/format";
 import { addQuoteLineItem, convertQuoteToJob, updateQuoteStatus } from "../actions";
 import { LineItemForm } from "@/components/LineItemForm";
 
@@ -74,7 +74,7 @@ export default async function QuoteDetailPage({
       <div className="card">
         <p className="section-title">Status</p>
         <p className="meta">
-          Current: <span className="badge">{formatEnum(quote.status)}</span>
+          Current: <span className={statusBadgeClass(quote.status)}>{formatEnum(quote.status)}</span>
         </p>
 
         {quote.status !== "converted" && (

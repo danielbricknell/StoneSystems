@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
-import { formatEnum } from "@/lib/format";
+import { formatEnum, statusBadgeClass } from "@/lib/format";
 
 export default async function JobsPage() {
   const session = await requireSession();
@@ -49,7 +49,7 @@ export default async function JobsPage() {
                 <td>{job.property.label ?? job.property.address ?? "—"}</td>
                 <td>{formatEnum(job.type)}</td>
                 <td>
-                  <span className="badge">{formatEnum(job.status)}</span>
+                  <span className={statusBadgeClass(job.status)}>{formatEnum(job.status)}</span>
                 </td>
                 <td>{job.priority ? formatEnum(job.priority) : "—"}</td>
               </tr>

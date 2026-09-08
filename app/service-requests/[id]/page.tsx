@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { formatEnum } from "@/lib/format";
+import { formatEnum, statusBadgeClass } from "@/lib/format";
 import { markServiceRequestReviewed, markServiceRequestSpam } from "../actions";
 import { ConvertServiceRequestForm } from "./ConvertServiceRequestForm";
 
@@ -44,7 +44,7 @@ export default async function ServiceRequestDetailPage({
         <p className="meta">Property address: {request.propertyAddress ?? "—"}</p>
         {request.description && <p className="meta">Description: {request.description}</p>}
         <p className="meta">
-          Status: <span className="badge">{formatEnum(request.status)}</span>
+          Status: <span className={statusBadgeClass(request.status)}>{formatEnum(request.status)}</span>
         </p>
         {request.matchedCustomer && (
           <p className="meta">

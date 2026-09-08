@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { hasPermission } from "@/lib/permissions";
-import { formatEnum } from "@/lib/format";
+import { formatEnum, statusBadgeClass } from "@/lib/format";
 import {
   addJobAttachment,
   addJobLineItem,
@@ -119,7 +119,7 @@ export default async function JobDetailPage({
       <div className="card">
         <p className="section-title">Status</p>
         <p className="meta">
-          Current: <span className="badge">{formatEnum(job.status)}</span>
+          Current: <span className={statusBadgeClass(job.status)}>{formatEnum(job.status)}</span>
         </p>
         {canEditJobs && (
           <form action={updateStatusForJob} className="form-inline">
@@ -168,7 +168,9 @@ export default async function JobDetailPage({
                     <td>{appointment.startTime.toLocaleString()}</td>
                     <td>{appointment.endTime.toLocaleString()}</td>
                     <td>
-                      <span className="badge">{formatEnum(appointment.status)}</span>
+                      <span className={statusBadgeClass(appointment.status)}>
+                        {formatEnum(appointment.status)}
+                      </span>
                     </td>
                     {canEditJobs && (
                       <td>
@@ -310,7 +312,9 @@ export default async function JobDetailPage({
                   <td>{entry.clockOut ? entry.clockOut.toLocaleString() : "In progress"}</td>
                   <td>{entry.billable ? "Yes" : "No"}</td>
                   <td>
-                    <span className="badge">{formatEnum(entry.approvalStatus)}</span>
+                    <span className={statusBadgeClass(entry.approvalStatus)}>
+                      {formatEnum(entry.approvalStatus)}
+                    </span>
                   </td>
                 </tr>
               ))}
@@ -476,7 +480,9 @@ export default async function JobDetailPage({
                   <div key={invoice.id}>
                     <p className="meta">
                       Total: ${invoice.total?.toFixed(2) ?? "0.00"} — Current:{" "}
-                      <span className="badge">{formatEnum(invoice.status)}</span>
+                      <span className={statusBadgeClass(invoice.status)}>
+                        {formatEnum(invoice.status)}
+                      </span>
                     </p>
                     <form action={updateThisInvoiceStatus} className="form-inline">
                       <div className="field">

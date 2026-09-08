@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requirePermissionOrRedirect } from "@/lib/permissions";
-import { formatEnum } from "@/lib/format";
+import { formatEnum, statusBadgeClass } from "@/lib/format";
 
 export default async function InvoicesPage() {
   await requirePermissionOrRedirect("view_financials", "/");
@@ -42,7 +42,7 @@ export default async function InvoicesPage() {
                 </td>
                 <td>{invoice.job.customer.name}</td>
                 <td>
-                  <span className="badge">{formatEnum(invoice.status)}</span>
+                  <span className={statusBadgeClass(invoice.status)}>{formatEnum(invoice.status)}</span>
                 </td>
                 <td>${invoice.total?.toFixed(2) ?? "0.00"}</td>
               </tr>

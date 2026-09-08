@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requirePermissionOrRedirect } from "@/lib/permissions";
-import { formatEnum } from "@/lib/format";
+import { formatEnum, statusBadgeClass } from "@/lib/format";
 
 export default async function QuotesPage() {
   await requirePermissionOrRedirect("view_financials", "/");
@@ -40,7 +40,7 @@ export default async function QuotesPage() {
                 </td>
                 <td>{quote.property?.label ?? quote.property?.address ?? "—"}</td>
                 <td>
-                  <span className="badge">{formatEnum(quote.status)}</span>
+                  <span className={statusBadgeClass(quote.status)}>{formatEnum(quote.status)}</span>
                 </td>
                 <td>${quote.total?.toFixed(2) ?? "0.00"}</td>
               </tr>
