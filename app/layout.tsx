@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Montserrat } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
 import { getSession } from "@/lib/auth";
 import { isAdminRole, isFieldTechRole } from "@/lib/roles";
 import { logout } from "./logout/actions";
 
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-montserrat",
+});
+
 export const metadata: Metadata = {
-  title: "Field Service App",
+  title: "Stone Security — Field Service",
   description: "Customer, job, scheduling, and QBO sync management.",
 };
 
@@ -15,11 +22,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const session = await getSession();
 
   return (
-    <html lang="en">
+    <html lang="en" className={montserrat.variable}>
       <body>
         <nav className="topnav">
           <div className="topnav-primary">
-            <strong>Field Service App</strong>
+            <strong className="brand">
+              Stone<span className="brand-light">Security</span>
+            </strong>
             {session && isFieldTechRole(session.roleName) && (
               <>
                 <Link href="/jobs">Jobs</Link>

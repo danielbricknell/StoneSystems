@@ -1,16 +1,26 @@
+:root {
+  /* Stone Security brand palette, sampled from the logo mark (shield
+     fades from --brand-blue to --brand-navy) and wordmark (near-black). */
+  --brand-blue: #2569b0;
+  --brand-blue-dark: #1b4e85;
+  --brand-navy: #23407a;
+  --text-dark: #16171a;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  color: #1a1d21;
+  font-family: var(--font-montserrat), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    sans-serif;
+  color: var(--text-dark);
   background: #f7f8fa;
 }
 
 a {
-  color: #2454ff;
+  color: var(--brand-blue);
   text-decoration: none;
 }
 
@@ -26,7 +36,7 @@ a:hover {
   gap: 0.6rem 1.5rem;
   padding: 0.9rem 1.5rem;
   background: #fff;
-  border-bottom: 1px solid #e3e5e8;
+  border-bottom: 2px solid var(--brand-navy);
 }
 
 .topnav-primary,
@@ -37,9 +47,17 @@ a:hover {
   gap: 0.6rem 1.25rem;
 }
 
-.topnav strong {
+.brand {
   font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-dark);
   white-space: nowrap;
+}
+
+.brand-light {
+  font-weight: 400;
 }
 
 .topnav a {
@@ -47,6 +65,10 @@ a:hover {
   font-size: 0.9rem;
   font-weight: 500;
   white-space: nowrap;
+}
+
+.topnav a:hover {
+  color: var(--brand-blue);
 }
 
 .topnav-search input {
@@ -79,7 +101,7 @@ main {
   display: inline-block;
   padding: 0.5rem 0.9rem;
   border-radius: 6px;
-  background: #2454ff;
+  background: var(--brand-blue);
   color: #fff;
   font-size: 0.85rem;
   font-weight: 600;
@@ -88,7 +110,7 @@ main {
 }
 
 .btn:hover {
-  background: #1a3fcc;
+  background: var(--brand-blue-dark);
   text-decoration: none;
 }
 
